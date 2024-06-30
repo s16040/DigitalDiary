@@ -7,4 +7,3 @@ data class Note(
     val imageUrl: String? = null,
     val audioUrl: String? = null
 )
-//ver 3.0.

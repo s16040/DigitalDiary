@@ -20,7 +20,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.app.Application
 
 class MainActivity : ComponentActivity() {
-    // Inicjalizacja ViewModel z użyciem MainViewModelFactory
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(application)
     }
@@ -95,7 +94,6 @@ fun Header() {
 @Composable
 fun MainScreenPreview() {
     DigitalDiaryTheme {
-        // Użycie MainViewModel z parametrem Application
         MainScreen(viewModel = MainViewModel(Application()))
     }
 }
