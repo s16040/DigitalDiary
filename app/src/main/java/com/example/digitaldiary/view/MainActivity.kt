@@ -24,34 +24,32 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import kotlinx.coroutines.launch
 
+import androidx.activity.ComponentActivity
 
-class MainActivity : AppCompatActivity() {
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
-    private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory() }
-    private lateinit var auth: FirebaseAuth
+import com.example.digitaldiary.repository.NoteRepository
 
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this)
-        auth = FirebaseAuth.getInstance()
+        val repository = NoteRepository() // Zakładając, że masz odpowiednią implementację
+        val viewModel: NoteViewModel by viewModels { NoteViewModelFactory(repository) }
 
         setContent {
             DigitalDiaryTheme {
-                val user = auth.currentUser
-                val navController = rememberNavController()
-                if (user != null) {
-                    AppNavHost(navController, viewModel, user.uid) {
-                        lifecycleScope.launch {
-                            auth.signOut()
-                            recreate()
-                        }
-                    }
-                } else {
-                    LoginScreen(onLoginSuccess = {
-                        recreate()
-                    })
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    AppNavHost(navController = navController, viewModel = viewModel)
                 }
             }
         }
@@ -59,23 +57,34 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Composable
-fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
-    NavHost(navController = navController, startDestination = "mainScreen") {
+fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel) {
+    androidx.navigation.compose.NavHost(
+        navController = navController,
+        startDestination = "mainScreen"
+    ) {
         composable("mainScreen") {
-            MainScreen(viewModel, userId, navController, onLogout)
+            MainScreen(navController, viewModel)
         }
-        composable("previousNotes") {
-            PreviousNotesScreen(navController, viewModel, userId)
-        }
-        composable("editNote/{noteId}") { backStackEntry ->
-            val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
+        composable(
+            "editNote/{noteId}",
+            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
             EditNoteScreen(navController, viewModel, noteId)
+        }
+        composable(
+            "previousNotesScreen/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            PreviousNotesScreen(navController, viewModel, userId)
         }
     }
 }
 
+
 @Composable
-fun MainScreen(viewModel: NoteViewModel, userId: String, navController: NavHostController, onLogout: () -> Unit) {
+fun MainScreen(navController: NavHostController, viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
     var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
     var noteContent by remember { mutableStateOf(TextFieldValue("")) }
 

@@ -8,7 +8,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.digitaldiary.viewmodel.NoteViewModel
-import kotlinx.coroutines.flow.collect
 
 @Composable
 fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, noteId: String) {
@@ -51,8 +50,8 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                         content = noteContent.text
                     )
                 )
+                navController.popBackStack()
             }
-            navController.popBackStack()
         }) {
             Text("Zapisz notatkę")
         }

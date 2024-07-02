@@ -1,46 +1,30 @@
 package com.example.digitaldiary.repository
 
 import com.example.digitaldiary.model.Note
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
-
+import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.UUID
 
 class NoteRepository {
 
-    private val db = FirebaseFirestore.getInstance()
-    private val notesCollection = db.collection("notes")
+    private val notes = MutableStateFlow<List<Note>>(emptyList())
 
-    fun getNotesByUser(userId: String): Flow<QuerySnapshot> = callbackFlow {
-        val listener = notesCollection.whereEqualTo("userId", userId).addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                close(e)
-            } else {
-                snapshot?.let { trySend(it).isSuccess }
-            }
-        }
-        awaitClose { listener.remove() }
+    fun getNotes(userId: String): Flow<List<Note>> {
+        // Implementacja pobierania notatek z odpowiednim userId
+        return notes
     }
 
-    suspend fun addNote(note: Note) {
-        notesCollection.add(note).await()
+    fun addNote(note: Note) {
+        val noteWithId = note.copy(id = UUID.randomUUID().toString())
+        notes.value = notes.value + noteWithId
     }
 
-    suspend fun updateNote(note: Note) {
-        notesCollection.document(note.id).set(note).await()
+    fun updateNote(note: Note) {
+        notes.value = notes.value.map { if (it.id == note.id) note else it }
     }
 
-    fun getNoteById(noteId: String): Flow<Note?> = callbackFlow {
-        val listener = notesCollection.document(noteId).addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                close(e)
-            } else {
-                snapshot?.let { trySend(it.toObject(Note::class.java)).isSuccess }
-            }
-        }
-        awaitClose { listener.remove() }
+    fun getNoteById(noteId: String): Flow<Note?> {
+        // Implementacja pobierania notatki po noteId
+        return MutableStateFlow(notes.value.find { it.id == noteId })
     }
 }
