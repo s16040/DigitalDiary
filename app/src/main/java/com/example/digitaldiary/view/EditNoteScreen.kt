@@ -15,12 +15,14 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
 
     var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
     var noteContent by remember { mutableStateOf(TextFieldValue("")) }
+    var noteCity by remember { mutableStateOf(TextFieldValue("")) }
+    // Dodaj zmienne dla imageUrl, audioUrl, location, jeśli są potrzebne w interfejsie użytkownika
 
-    LaunchedEffect(noteState) {
-        noteState?.let { note ->
-            noteTitle = TextFieldValue(note.title)
-            noteContent = TextFieldValue(note.content)
-        }
+    noteState?.let { note ->
+        noteTitle = TextFieldValue(note.title)
+        noteContent = TextFieldValue(note.content)
+        noteCity = TextFieldValue(note.city)
+        // Inicjalizuj inne pola jeśli są potrzebne
     }
 
     Column(
@@ -44,12 +46,22 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                 .weight(1f)
         )
         Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = noteCity,
+            onValueChange = { noteCity = it },
+            label = { Text("Miasto") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        // Dodaj pola dla imageUrl, audioUrl, location, jeśli są potrzebne
+        Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
             noteState?.let { note ->
                 viewModel.updateNote(
                     note.copy(
                         title = noteTitle.text,
-                        content = noteContent.text
+                        content = noteContent.text,
+                        city = noteCity.text
+                        // Przekaż inne pola jeśli są potrzebne
                     )
                 )
                 navController.popBackStack()

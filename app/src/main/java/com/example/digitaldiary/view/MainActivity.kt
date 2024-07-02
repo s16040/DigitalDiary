@@ -78,6 +78,8 @@ fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel, userI
 fun MainScreen(viewModel: NoteViewModel, userId: String, navController: NavHostController, onLogout: () -> Unit) {
     var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
     var noteContent by remember { mutableStateOf(TextFieldValue("")) }
+    var noteCity by remember { mutableStateOf(TextFieldValue("")) }
+    // Dodaj zmienne dla imageUrl, audioUrl, location, jeśli są potrzebne w interfejsie użytkownika
 
     Column(
         modifier = Modifier
@@ -101,12 +103,21 @@ fun MainScreen(viewModel: NoteViewModel, userId: String, navController: NavHostC
                 .weight(1f)
         )
         Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = noteCity,
+            onValueChange = { noteCity = it },
+            label = { Text("Miasto") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 viewModel.addNote(
                     title = noteTitle.text,
                     content = noteContent.text,
-                    userId = userId
+                    userId = userId,
+                    city = noteCity.text
+                    // Dodaj inne parametry jeśli są potrzebne
                 )
             },
             modifier = Modifier.fillMaxWidth()
@@ -157,7 +168,6 @@ fun MainScreen(viewModel: NoteViewModel, userId: String, navController: NavHostC
         }
     }
 }
-
 
 
 @Composable

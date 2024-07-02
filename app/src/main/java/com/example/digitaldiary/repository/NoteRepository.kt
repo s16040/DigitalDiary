@@ -9,38 +9,62 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 
-class NoteRepository {
 
+
+class NoteRepository {
     private val db = FirebaseFirestore.getInstance()
     private val notesCollection = db.collection("notes")
 
-    fun getNotesByUser(userId: String): Flow<QuerySnapshot> = callbackFlow {
-        val listener = notesCollection.whereEqualTo("userId", userId).addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                close(e)
-            } else {
-                snapshot?.let { trySend(it).isSuccess }
-            }
-        }
-        awaitClose { listener.remove() }
-    }
+    fun addNote(
+        title: String,
+        content: String,
+        userId: String,
+        imageUrl: String? = null,
+        audioUrl: String? = null,
+        location: String? = null,
+        city: String = ""
+    ) {
+        val note = hashMapOf(
+            "title" to title,
+            "content" to content,
+            "userId" to userId,
+            "imageUrl" to imageUrl,
+            "audioUrl" to audioUrl,
+            "location" to location,
+            "timestamp" to System.currentTimeMillis(),
+            "city" to city
+        )
 
-    suspend fun addNote(note: Note) {
-        notesCollection.add(note).await()
+        notesCollection.add(note)
+            .addOnSuccessListener { documentReference ->
+                val noteId = documentReference.id
+                notesCollection.document(noteId).update("id", noteId)
+            }
+            .addOnFailureListener { e ->
+                // Obsługa błędu
+            }
+    }
+    suspend fun getNoteById(noteId: String): Note? {
+        return try {
+            val documentSnapshot = notesCollection.document(noteId).get().await()
+            documentSnapshot.toObject(Note::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun updateNote(note: Note) {
-        notesCollection.document(note.id).set(note).await()
+        note.id?.let {
+            notesCollection.document(it).set(note).await()
+        }
     }
 
-    fun getNoteById(noteId: String): Flow<Note?> = callbackFlow {
-        val listener = notesCollection.document(noteId).addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                close(e)
-            } else {
-                snapshot?.let { trySend(it.toObject(Note::class.java)).isSuccess }
-            }
+    suspend fun getAllNotes(userId: String): List<Note> {
+        return try {
+            val querySnapshot = notesCollection.whereEqualTo("userId", userId).get().await()
+            querySnapshot.toObjects(Note::class.java)
+        } catch (e: Exception) {
+            emptyList()
         }
-        awaitClose { listener.remove() }
     }
 }

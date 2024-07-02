@@ -18,15 +18,12 @@ import java.util.Locale
 
 
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
-
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
-    val notes: StateFlow<List<Note>> get() = _notes
+    val notes: StateFlow<List<Note>> = _notes
 
     fun loadNotes(userId: String) {
         viewModelScope.launch {
-            repository.getNotesByUser(userId).collect { snapshot ->
-                _notes.value = snapshot.toObjects(Note::class.java)
-            }
+            _notes.value = repository.getAllNotes(userId)
         }
     }
 
@@ -35,36 +32,27 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         content: String,
         userId: String,
         imageUrl: String? = null,
-        audioUrl: String? = null
+        audioUrl: String? = null,
+        location: String? = null,
+        city: String = ""
     ) {
         viewModelScope.launch {
-            val location = "Some Location" // Implement location fetching logic
-            val city = "Some City" // Implement city fetching logic
-            val timestamp = System.currentTimeMillis()
-            val sdf = SimpleDateFormat("dd.MM.yyyy/HH:mm", Locale.getDefault())
-            val date = sdf.format(Date(timestamp))
-            val noteContent = "$content\n#$city #$date"
-
-            val note = Note(
+            repository.addNote(
                 title = title,
-                content = noteContent,
+                content = content,
                 userId = userId,
                 imageUrl = imageUrl,
                 audioUrl = audioUrl,
                 location = location,
-                timestamp = timestamp,
                 city = city
             )
-            repository.addNote(note)
         }
     }
 
     fun getNoteById(noteId: String): StateFlow<Note?> {
         val noteFlow = MutableStateFlow<Note?>(null)
         viewModelScope.launch {
-            repository.getNoteById(noteId).collect { note ->
-                noteFlow.value = note
-            }
+            noteFlow.value = repository.getNoteById(noteId)
         }
         return noteFlow
     }
@@ -72,6 +60,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     fun updateNote(note: Note) {
         viewModelScope.launch {
             repository.updateNote(note)
+            loadNotes(note.userId)
         }
     }
 }
