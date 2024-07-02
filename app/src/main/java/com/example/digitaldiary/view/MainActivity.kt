@@ -7,17 +7,19 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+//import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
+//import androidx.lifecycle.lifecycleScope
 import com.example.digitaldiary.viewmodel.NoteViewModel
 import com.example.digitaldiary.viewmodel.NoteViewModelFactory
 import com.example.digitaldiary.ui.theme.DigitalDiaryTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.FirebaseApp
-import kotlinx.coroutines.launch
+//import kotlinx.coroutines.launch
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,13 +33,12 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             DigitalDiaryTheme {
+                val navController = rememberNavController()
                 val user = auth.currentUser
                 if (user != null) {
-                    MainScreen(viewModel, user.uid) {
-                        lifecycleScope.launch {
-                            auth.signOut()
-                            recreate()
-                        }
+                    MainNavGraph(navController = navController, viewModel = viewModel, userId = user.uid) {
+                        auth.signOut()
+                        recreate()
                     }
                 } else {
                     LoginScreen(onLoginSuccess = {
@@ -49,39 +50,66 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+
+
 @Composable
 fun MainScreen(viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
-    var noteText by remember { mutableStateOf(TextFieldValue("")) }
-    val notes by viewModel.notes.observeAsState(emptyList())
-
-    LaunchedEffect(userId) {
-        viewModel.loadNotes(userId)
-    }
+    var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
+    var noteContent by remember { mutableStateOf(TextFieldValue("")) }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
         TextField(
-            value = noteText,
-            onValueChange = { noteText = it },
-            label = { Text("Wprowadź notatkę") },
+            value = noteTitle,
+            onValueChange = { noteTitle = it },
+            label = { Text("Tytuł notatki") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { viewModel.addNote(noteText.text, "Note content", userId) }) {
-            Text("Dodaj notatkę")
+        TextField(
+            value = noteContent,
+            onValueChange = { noteContent = it },
+            label = { Text("Treść notatki") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = {
+            viewModel.addNote(
+                title = noteTitle.text,
+                content = noteContent.text,
+                userId = userId
+            )
+        }) {
+            Text("Zatwierdź Notatkę")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { /* Add image functionality */ }) {
+            Text("Dodaj Zdjęcie")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { /* Add audio recording functionality */ }) {
+            Text("Dodaj Nagranie Głosowe")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { /* Navigate to Map Screen */ }) {
+            Text("Mapa Notatek")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { /* Navigate to Notes List Screen */ }) {
+            Text("Poprzednie Notatki")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onLogout) {
             Text("Wyloguj")
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        notes.forEach { note ->
-            Text(text = note.title)
-            Text(text = note.content)
-        }
     }
 }
+
 
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit) {

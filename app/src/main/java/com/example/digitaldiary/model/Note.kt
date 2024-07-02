@@ -7,5 +7,7 @@ data class Note(
     val userId: String = "",
     val imageUrl: String? = null,
     val audioUrl: String? = null,
-    val location: String? = null
+    val location: String? = null,
+    val timestamp: Long = System.currentTimeMillis(),
+    val city: String = ""
 )
