@@ -30,7 +30,10 @@ accompanistPermissions = "0.24.13-rc"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 firebaseFirestoreKtx = "25.0.0"
 
+appCompat = "1.7.0"
+
 [libraries]
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "appCompat" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
