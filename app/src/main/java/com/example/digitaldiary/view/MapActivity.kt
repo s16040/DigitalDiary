@@ -1,4 +1,4 @@
-package com.example.digitaldiary
+package com.example.digitaldiary.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.digitaldiary.ui.theme.DigitalDiaryTheme
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.maps.model.LatLng
 

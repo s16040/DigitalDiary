@@ -21,10 +21,10 @@
             android:value="${MAPS_API_KEY}" />
 
         <activity
-            android:name=".MapActivity"
+            android:name=".view.MapActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".view.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.DigitalDiary" >
             <intent-filter>
