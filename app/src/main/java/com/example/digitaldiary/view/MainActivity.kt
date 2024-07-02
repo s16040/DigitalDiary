@@ -26,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.launch
 
+
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory() }
@@ -61,7 +62,7 @@ class MainActivity : AppCompatActivity() {
 fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
     NavHost(navController = navController, startDestination = "mainScreen") {
         composable("mainScreen") {
-            MainScreen(viewModel, userId, onLogout)
+            MainScreen(viewModel, userId, navController, onLogout)
         }
         composable("previousNotes") {
             PreviousNotesScreen(navController, viewModel, userId)
@@ -73,16 +74,16 @@ fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel, userI
     }
 }
 
-
 @Composable
-fun MainScreen(viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
+fun MainScreen(viewModel: NoteViewModel, userId: String, navController: NavHostController, onLogout: () -> Unit) {
     var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
     var noteContent by remember { mutableStateOf(TextFieldValue("")) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
     ) {
         TextField(
             value = noteTitle,
@@ -100,37 +101,63 @@ fun MainScreen(viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
                 .weight(1f)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            viewModel.addNote(
-                title = noteTitle.text,
-                content = noteContent.text,
-                userId = userId
-            )
-        }) {
+        Button(
+            onClick = {
+                viewModel.addNote(
+                    title = noteTitle.text,
+                    content = noteContent.text,
+                    userId = userId
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Zatwierdź Notatkę")
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Add image functionality */ }) {
-            Text("Dodaj Zdjęcie")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = { /* Add image functionality */ },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Dodaj Zdjęcie")
+            }
+            Button(
+                onClick = { /* Add audio recording functionality */ },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Dodaj Nagranie Głosowe")
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Add audio recording functionality */ }) {
-            Text("Dodaj Nagranie Głosowe")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = { /* Navigate to Map Screen */ },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Mapa Notatek")
+            }
+            Button(
+                onClick = {
+                    navController.navigate("previousNotes")
+                },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Poprzednie Notatki")
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Navigate to Map Screen */ }) {
-            Text("Mapa Notatek")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Navigate to Notes List Screen */ }) {
-            Text("Poprzednie Notatki")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onLogout) {
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
             Text("Wyloguj")
         }
     }
 }
+
 
 
 @Composable
