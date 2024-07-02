@@ -1,8 +1,7 @@
 package com.example.digitaldiary.view
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-//import androidx.activity.ComponentActivity
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 //import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -28,7 +27,11 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class MainActivity : AppCompatActivity() {
+
+
+
+
+class MainActivity : ComponentActivity() {
     private val viewModel: NoteViewModel by viewModels {
         MainViewModelFactory(application)
     }
