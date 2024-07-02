@@ -19,6 +19,7 @@ import com.example.digitaldiary.viewmodel.MainViewModelFactory
 import android.app.Application
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.livedata.observeAsState
 import com.example.digitaldiary.model.Note
 
 class MainActivity : ComponentActivity() {

@@ -88,6 +88,7 @@ dependencies {
     implementation(libs.maps.compose)
 
     implementation(libs.androidx.room.runtime)
+    implementation(libs.firebase.firestore.ktx)
     kapt(libs.androidx.room.compiler)
 
     implementation(libs.androidx.room.ktx)
