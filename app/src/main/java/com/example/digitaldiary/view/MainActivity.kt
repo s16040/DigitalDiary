@@ -20,6 +20,11 @@ import com.google.firebase.FirebaseApp
 //import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,12 +38,14 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             DigitalDiaryTheme {
-                val navController = rememberNavController()
                 val user = auth.currentUser
+                val navController = rememberNavController()
                 if (user != null) {
-                    MainNavGraph(navController = navController, viewModel = viewModel, userId = user.uid) {
-                        auth.signOut()
-                        recreate()
+                    AppNavHost(navController, viewModel, user.uid) {
+                        lifecycleScope.launch {
+                            auth.signOut()
+                            recreate()
+                        }
                     }
                 } else {
                     LoginScreen(onLoginSuccess = {
@@ -50,6 +57,21 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+@Composable
+fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
+    NavHost(navController = navController, startDestination = "mainScreen") {
+        composable("mainScreen") {
+            MainScreen(viewModel, userId, onLogout)
+        }
+        composable("previousNotes") {
+            PreviousNotesScreen(navController, viewModel, userId)
+        }
+        composable("editNote/{noteId}") { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
+            EditNoteScreen(navController, viewModel, noteId)
+        }
+    }
+}
 
 
 @Composable

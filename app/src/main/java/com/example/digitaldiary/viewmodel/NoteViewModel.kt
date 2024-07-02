@@ -1,9 +1,15 @@
 package com.example.digitaldiary.viewmodel
 
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.digitaldiary.model.Note
 import com.example.digitaldiary.repository.NoteRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -14,12 +20,9 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     val notes: LiveData<List<Note>> get() = _notes
 
     fun loadNotes(userId: String) {
-        repository.getNotesByUser(userId).addSnapshotListener { value, error ->
-            if (error != null) {
-                _notes.value = emptyList()
-                return@addSnapshotListener
-            }
-            _notes.value = value?.toObjects(Note::class.java)
+        viewModelScope.launch {
+            val notesList = repository.getNotesByUser(userId).get().await().toObjects(Note::class.java)
+            _notes.postValue(notesList)
         }
     }
 
@@ -34,7 +37,9 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
             val location = "Some Location" // Implement location fetching logic
             val city = "Some City" // Implement city fetching logic
             val timestamp = System.currentTimeMillis()
-            val noteContent = "$content\n#$city #${formatTimestamp(timestamp)}"
+            val sdf = SimpleDateFormat("dd.MM.yyyy/HH:mm", Locale.getDefault())
+            val date = sdf.format(Date(timestamp))
+            val noteContent = "$content\n#$city #$date"
 
             val note = Note(
                 title = title,
@@ -50,18 +55,16 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
 
-    fun updateNote(noteId: String, title: String, content: String) {
-        viewModelScope.launch {
-            repository.updateNote(noteId, title, content)
+    fun getNoteById(noteId: String): Flow<Note?> {
+        return repository.getNoteById(noteId).map { snapshot ->
+            snapshot?.toObject(Note::class.java)
         }
     }
 
-    fun getNoteById(noteId: String): LiveData<Note> {
-        return repository.getNoteById(noteId).asLiveData()
-    }
 
-    private fun formatTimestamp(timestamp: Long): String {
-        val sdf = SimpleDateFormat("dd.MM.yyyy/HH:mm", Locale.getDefault())
-        return sdf.format(Date(timestamp))
+    fun updateNote(note: Note) {
+        viewModelScope.launch {
+            repository.updateNote(note)
+        }
     }
 }
