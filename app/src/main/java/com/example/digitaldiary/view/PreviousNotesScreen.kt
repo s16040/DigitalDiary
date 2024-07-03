@@ -7,28 +7,50 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.digitaldiary.viewmodel.NoteViewModel
 
 @Composable
-fun PreviousNotesScreen(navController: NavHostController, viewModel: NoteViewModel, userId: String) {
+fun PreviousNotesScreen(navController: NavHostController, viewModel: NoteViewModel, userId: String, onLogout: () -> Unit) {
     val notes by viewModel.notes.collectAsState(initial = emptyList())
 
     LaunchedEffect(Unit) {
         viewModel.loadNotes(userId)
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        items(notes.sortedByDescending { it.timestamp }) { note ->
-            NoteItem(note.title, note.city, note.timestamp, onClick = {
-                navController.navigate("editNote/${note.id}")
-            })
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)
+        ) {
+            items(notes.sortedByDescending { it.timestamp }) { note ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .clickable { navController.navigate("editNote/${note.id}") },
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    NoteItem(note.title, note.city, note.timestamp, onClick = {
+                        navController.navigate("editNote/${note.id}")
+                    })
+                    Button(
+                        onClick = { viewModel.deleteNoteById(note.id) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text("Usuń")
+                    }
+                }
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)), modifier = Modifier.fillMaxWidth()) {
+            Text("Wyloguj")
         }
     }
 }

@@ -1,17 +1,19 @@
 package com.example.digitaldiary.view
 
-import android.Manifest
-import android.content.pm.PackageManager
+import android.content.Context
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -35,7 +37,6 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory() }
     private lateinit var auth: FirebaseAuth
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,20 +65,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getLastKnownLocation(callback: (Location?) -> Unit) {
+    fun getLastKnownLocation(context: Context, callback: (Location?, String?) -> Unit) {
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
                 ),
                 1
             )
@@ -85,202 +86,210 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            callback(location)
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = location?.let { geocoder.getFromLocation(it.latitude, it.longitude, 1) }
+            val cityName = addresses?.firstOrNull()?.locality
+            callback(location, cityName)
         }
     }
+}
 
-    @Composable
-    fun AppNavHost(
-        navController: NavHostController,
-        viewModel: NoteViewModel,
-        userId: String,
-        fusedLocationClient: FusedLocationProviderClient,
-        onLogout: () -> Unit
-    ) {
-        NavHost(navController = navController, startDestination = "mainScreen") {
-            composable("mainScreen") {
-                MainScreen(viewModel, userId, navController, onLogout, fusedLocationClient)
-            }
-            composable("previousNotes") {
-                PreviousNotesScreen(navController, viewModel, userId)
-            }
-            composable("editNote/{noteId}") { backStackEntry ->
-                val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
-                EditNoteScreen(navController, viewModel, noteId)
-            }
+@Composable
+fun AppNavHost(navController: NavHostController, viewModel: NoteViewModel, userId: String, fusedLocationClient: FusedLocationProviderClient, onLogout: () -> Unit) {
+    NavHost(navController = navController, startDestination = "mainScreen") {
+        composable("mainScreen") {
+            MainScreen(viewModel, userId, navController, fusedLocationClient, onLogout)
+        }
+        composable("previousNotes") {
+            PreviousNotesScreen(navController, viewModel, userId, onLogout)
+        }
+        composable("editNote/{noteId}") { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
+            EditNoteScreen(navController, viewModel, noteId)
         }
     }
+}
 
-    @Composable
-    fun MainScreen(
-        viewModel: NoteViewModel,
-        userId: String,
-        navController: NavHostController,
-        onLogout: () -> Unit,
-        fusedLocationClient: FusedLocationProviderClient
-    ) {
-        var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
-        var noteContent by remember { mutableStateOf(TextFieldValue("")) }
-        var location by remember { mutableStateOf<Location?>(null) }
-        var city by remember { mutableStateOf("") }
-        val context = LocalContext.current
+@Composable
+fun MainScreen(
+    viewModel: NoteViewModel,
+    userId: String,
+    navController: NavHostController,
+    fusedLocationClient: FusedLocationProviderClient,
+    onLogout: () -> Unit
+) {
+    var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
+    var noteContent by remember { mutableStateOf(TextFieldValue("")) }
+    var location by remember { mutableStateOf<Location?>(null) }
+    var city by remember { mutableStateOf("") }
+    var timestamp by remember { mutableStateOf(0L) }
 
-        LaunchedEffect(Unit) {
-            getLastKnownLocation { loc ->
-                location = loc
-                loc?.let {
-                    val geocoder = Geocoder(context, Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                    if (!addresses.isNullOrEmpty()) {
-                        city = addresses[0].locality ?: ""
+    val context = LocalContext.current
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+                (context as MainActivity).getLastKnownLocation(context) { loc, cityName ->
+                    loc?.let {
+                        location = it
+                        city = cityName ?: ""
+                        timestamp = System.currentTimeMillis()
                     }
                 }
             }
         }
+    )
 
-        Column(
+    LaunchedEffect(Unit) {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = noteTitle,
+            onValueChange = { noteTitle = it },
+            label = { Text("Tytuł notatki") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = noteContent,
+            onValueChange = { noteContent = it },
+            label = { Text("Treść notatki") },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
+                .fillMaxWidth()
+                .weight(1f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = {
+                viewModel.addNote(
+                    title = noteTitle.text,
+                    content = noteContent.text,
+                    userId = userId,
+                    city = city
+                )
+                noteTitle = TextFieldValue("")
+                noteContent = TextFieldValue("")
+                (context as MainActivity).getLastKnownLocation(context) { loc, cityName ->
+                    loc?.let {
+                        location = it
+                        city = cityName ?: ""
+                        timestamp = System.currentTimeMillis()
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            TextField(
-                value = noteTitle,
-                onValueChange = { noteTitle = it },
-                label = { Text("Tytuł notatki") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = noteContent,
-                onValueChange = { noteContent = it },
-                label = { Text("Treść notatki") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Text("Zatwierdź Notatkę")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = { /* Add image functionality */ },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Dodaj Zdjęcie")
+            }
+            Button(
+                onClick = { /* Add audio recording functionality */ },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Dodaj Nagranie Głosowe")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = { /* Navigate to Map Screen */ },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Mapa Notatek")
+            }
             Button(
                 onClick = {
-                    viewModel.addNote(
-                        title = noteTitle.text,
-                        content = noteContent.text,
-                        userId = userId,
-                        city = city
-                    )
-                    noteTitle = TextFieldValue("")
-                    noteContent = TextFieldValue("")
-                    getLastKnownLocation { loc ->
-                        location = loc
-                        loc?.let {
-                            val geocoder = Geocoder(context, Locale.getDefault())
-                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                            if (!addresses.isNullOrEmpty()) {
-                                city = addresses[0].locality ?: ""
-                            }
-                        }
-                    }
+                    navController.navigate("previousNotes")
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
-                Text("Zatwierdź Notatkę")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { /* Add image functionality */ },
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                ) {
-                    Text("Dodaj Zdjęcie")
-                }
-                Button(
-                    onClick = { /* Add audio recording functionality */ },
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
-                ) {
-                    Text("Dodaj Nagranie Głosowe")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { /* Navigate to Map Screen */ },
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                ) {
-                    Text("Mapa Notatek")
-                }
-                Button(
-                    onClick = {
-                        navController.navigate("previousNotes")
-                    },
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
-                ) {
-                    Text("Poprzednie Notatki")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-                Text("Wyloguj")
+                Text("Poprzednie Notatki")
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
+            Text("Wyloguj")
+        }
     }
+}
 
-    @Composable
-    fun LoginScreen(onLoginSuccess: () -> Unit) {
-        var email by remember { mutableStateOf(TextFieldValue("")) }
-        var password by remember { mutableStateOf(TextFieldValue("")) }
-        val auth = FirebaseAuth.getInstance()
+@Composable
+fun LoginScreen(onLoginSuccess: () -> Unit) {
+    var email by remember { mutableStateOf(TextFieldValue("")) }
+    var password by remember { mutableStateOf(TextFieldValue("")) }
+    val auth = FirebaseAuth.getInstance()
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            TextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                auth.signInWithEmailAndPassword(email.text, password.text)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            onLoginSuccess()
-                        } else {
-                            // Obsługa błędu logowania
-                        }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = {
+            auth.signInWithEmailAndPassword(email.text, password.text)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        onLoginSuccess()
+                    } else {
+                        // Obsługa błędu logowania
                     }
-            }) {
-                Text("Zaloguj się")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                auth.createUserWithEmailAndPassword(email.text, password.text)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            onLoginSuccess()
-                        } else {
-                            // Obsługa błędu rejestracji
-                        }
+                }
+        }) {
+            Text("Zaloguj się")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = {
+            auth.createUserWithEmailAndPassword(email.text, password.text)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        onLoginSuccess()
+                    } else {
+                        // Obsługa błędu rejestracji
                     }
-            }) {
-                Text("Zarejestruj się")
-            }
+                }
+        }) {
+            Text("Zarejestruj się")
         }
     }
 }

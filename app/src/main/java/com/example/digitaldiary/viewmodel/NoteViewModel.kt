@@ -1,21 +1,12 @@
 package com.example.digitaldiary.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digitaldiary.model.Note
 import com.example.digitaldiary.repository.NoteRepository
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
 
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
@@ -49,13 +40,15 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 location = location,
                 city = city
             )
+            loadNotes(userId)
         }
     }
 
-    fun getNoteById(noteId: String) {
+    fun getNoteById(noteId: String): StateFlow<Note?> {
         viewModelScope.launch {
             _noteState.value = repository.getNoteById(noteId)
         }
+        return _noteState
     }
 
     fun updateNote(note: Note) {
@@ -64,4 +57,21 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
             loadNotes(note.userId)
         }
     }
+
+    fun deleteNote(noteId: String) {
+        viewModelScope.launch {
+            val note = repository.getNoteById(noteId)
+            if (note != null) {
+                repository.deleteNote(noteId)
+                loadNotes(note.userId)
+            }
+        }
+    }
+    fun deleteNoteById(noteId: String) {
+        viewModelScope.launch {
+            repository.deleteNote(noteId)
+            loadNotes(_noteState.value?.userId ?: "")
+        }
+    }
+
 }
