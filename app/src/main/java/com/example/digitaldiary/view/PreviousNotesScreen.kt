@@ -24,7 +24,7 @@ fun PreviousNotesScreen(navController: NavHostController, viewModel: NoteViewMod
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        items(notes) { note ->
+        items(notes.sortedByDescending { it.timestamp }) { note ->
             NoteItem(note.title, note.city, note.timestamp, onClick = {
                 navController.navigate("editNote/${note.id}")
             })

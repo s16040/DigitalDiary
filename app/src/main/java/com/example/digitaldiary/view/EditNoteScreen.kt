@@ -20,10 +20,14 @@ import androidx.navigation.NavHostController
 import com.example.digitaldiary.viewmodel.NoteViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.io.IOException
 import java.util.*
 
-fun updateLocationAndCity(
+suspend fun updateLocationAndCity(
     fusedLocationClient: FusedLocationProviderClient,
     context: Context,
     callback: (Location?, String?) -> Unit
@@ -39,17 +43,36 @@ fun updateLocationAndCity(
         return
     }
 
-    fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-        location?.let {
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-            if (addresses != null && addresses.isNotEmpty()) {
-                val cityName = addresses[0].locality ?: ""
-                callback(it, cityName)
-            } else {
+    withContext(Dispatchers.IO) {
+        try {
+            val location = fusedLocationClient.lastLocation.await()
+            location?.let {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                var cityName: String? = null
+                var retryCount = 0
+                val maxRetries = 3
+                while (retryCount < maxRetries) {
+                    try {
+                        val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                        if (!addresses.isNullOrEmpty()) {
+                            cityName = addresses[0].locality
+                            break
+                        }
+                    } catch (e: IOException) {
+                        retryCount++
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    callback(it, cityName)
+                }
+            } ?: withContext(Dispatchers.Main) {
                 callback(null, null)
             }
-        } ?: callback(null, null)
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                callback(null, null)
+            }
+        }
     }
 }
 
@@ -87,10 +110,12 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         onResult = { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-                updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
-                    loc?.let {
-                        city = cityName ?: ""
-                        timestamp = System.currentTimeMillis()
+                scope.launch {
+                    updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
+                        loc?.let {
+                            city = cityName ?: ""
+                            timestamp = System.currentTimeMillis()
+                        }
                     }
                 }
             }
@@ -140,12 +165,13 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         }
     }
 
-    // Uaktualnienie lokalizacji i miasta przy uruchomieniu ekranu
     LaunchedEffect(Unit) {
-        updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
-            loc?.let {
-                city = cityName ?: ""
-                timestamp = System.currentTimeMillis()
+        scope.launch {
+            updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
+                loc?.let {
+                    city = cityName ?: ""
+                    timestamp = System.currentTimeMillis()
+                }
             }
         }
     }
