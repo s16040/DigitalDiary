@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Zatwierdź Notatkę")
+                Text("Zapisz Notatkę")
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -200,7 +200,7 @@ class MainActivity : AppCompatActivity() {
                     onClick = { /* Add audio recording functionality */ },
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
-                    Text("Dodaj Nagranie Głosowe")
+                    Text("Dodaj Nagranie")
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -265,7 +265,9 @@ class MainActivity : AppCompatActivity() {
                             // Obsługa błędu logowania
                         }
                     }
-            }) {
+            },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Zaloguj się")
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -278,7 +280,9 @@ class MainActivity : AppCompatActivity() {
                             // Obsługa błędu rejestracji
                         }
                     }
-            }) {
+            },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Zarejestruj się")
             }
         }

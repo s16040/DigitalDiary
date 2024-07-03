@@ -2,18 +2,11 @@ package com.example.digitaldiary.repository
 
 import com.example.digitaldiary.model.Note
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-
-
-
 class NoteRepository {
-    private val db = FirebaseFirestore.getInstance()
-    private val notesCollection = db.collection("notes")
+    private val firestore = FirebaseFirestore.getInstance()
+    private val notesCollection = firestore.collection("notes")
 
     fun addNote(
         title: String,
@@ -44,6 +37,7 @@ class NoteRepository {
                 // Obsługa błędu
             }
     }
+
     suspend fun getNoteById(noteId: String): Note? {
         return try {
             val documentSnapshot = notesCollection.document(noteId).get().await()
@@ -54,9 +48,11 @@ class NoteRepository {
     }
 
     suspend fun updateNote(note: Note) {
-        note.id?.let {
-            notesCollection.document(it).set(note).await()
-        }
+        notesCollection.document(note.id).set(note).await()
+    }
+
+    suspend fun deleteNote(noteId: String) {
+        notesCollection.document(noteId).delete().await()
     }
 
     suspend fun getAllNotes(userId: String): List<Note> {

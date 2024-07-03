@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -109,7 +110,8 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            ) {
                 scope.launch {
                     updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
                         loc?.let {
@@ -122,11 +124,13 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         }
     )
 
+// Kolumna z elementami UI
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Pole tekstowe do wprowadzania tytułu notatki
         TextField(
             value = noteTitle,
             onValueChange = { noteTitle = it },
@@ -134,6 +138,7 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
+        // Pole tekstowe do wprowadzania treści notatki
         TextField(
             value = noteContent,
             onValueChange = { noteContent = it },
@@ -143,34 +148,73 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                 .weight(1f)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            noteState?.let { note ->
-                val initialInfo = if (initialCity.isNotEmpty() && initialTimestamp != 0L) {
-                    "Notatka poprzednim razem utworzona w miejscowości $initialCity. Moment utworzenia to ${Date(initialTimestamp)}\n\n"
-                } else {
-                    ""
-                }
-                viewModel.updateNote(
-                    note.copy(
-                        title = noteTitle.text,
-                        content = initialInfo + noteContent.text,
-                        city = city,
-                        timestamp = timestamp
+        // Wiersz z przyciskami
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Przycisk do zapisywania notatki
+            Button(
+                onClick = {
+                    viewModel.updateNote(
+                        noteState!!.copy(
+                            title = noteTitle.text,
+                            content = noteContent.text,
+                            city = city,
+                            timestamp = System.currentTimeMillis()
+                        )
                     )
-                )
-                navController.popBackStack()
+                    navController.popBackStack()
+                },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Zapisz Notatkę")
             }
-        }) {
-            Text("Zapisz notatkę")
+            // Przycisk do dodawania zdjęcia (na razie bez funkcjonalności)
+            Button(
+                onClick = { /* Add image functionality */ },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Dodaj Zdjęcie")
+            }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
-                loc?.let {
-                    city = cityName ?: ""
-                    timestamp = System.currentTimeMillis()
+        Spacer(modifier = Modifier.height(16.dp))
+        // Wiersz z kolejnymi przyciskami
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Przycisk do dodawania nagrania głosowego (na razie bez funkcjonalności)
+            Button(
+                onClick = { /* Add audio recording functionality */ },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Dodaj Nagranie")
+            }
+            // Przycisk do usuwania notatki
+            Button(
+                onClick = {
+                    viewModel.deleteNote(noteId)
+                    navController.popBackStack()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Usuń")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        // Przycisk do powrotu do poprzedniego ekranu
+        Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
+            Text("Wróć")
+        }
+        LaunchedEffect(Unit) {
+            scope.launch {
+                updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
+                    loc?.let {
+                        city = cityName ?: ""
+                        timestamp = System.currentTimeMillis()
+                    }
                 }
             }
         }
