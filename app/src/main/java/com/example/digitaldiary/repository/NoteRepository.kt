@@ -34,7 +34,7 @@ class NoteRepository {
                 notesCollection.document(noteId).update("id", noteId)
             }
             .addOnFailureListener { e ->
-                // Obsługa błędu
+                // Obsługa błędu?
             }
     }
 

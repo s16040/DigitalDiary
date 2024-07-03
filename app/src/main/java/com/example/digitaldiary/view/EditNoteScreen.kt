@@ -5,9 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+//import androidx.activity.compose.rememberLauncherForActivityResult
+//import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -99,38 +98,37 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         noteState?.let { note ->
             noteTitle = TextFieldValue(note.title)
             noteContent = TextFieldValue(note.content)
-            city = note.city ?: ""
+            city = note.city
             timestamp = note.timestamp
-            initialCity = note.city ?: ""
+            initialCity = note.city
             initialTimestamp = note.timestamp
         }
     }
 
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { permissions ->
-            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-            ) {
-                scope.launch {
-                    updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
-                        loc?.let {
-                            city = cityName ?: ""
-                            timestamp = System.currentTimeMillis()
-                        }
-                    }
-                }
-            }
-        }
-    )
+//    val locationPermissionLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.RequestMultiplePermissions(),
+//        onResult = { permissions ->
+//            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+//                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+//            ) {
+//                scope.launch {
+//                    updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->
+//                        loc?.let {
+//                            city = cityName ?: ""
+//                            timestamp = System.currentTimeMillis()
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    )
 
-// Kolumna z elementami UI
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Pole tekstowe do wprowadzania tytułu notatki
+
         TextField(
             value = noteTitle,
             onValueChange = { noteTitle = it },
@@ -138,7 +136,7 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        // Pole tekstowe do wprowadzania treści notatki
+
         TextField(
             value = noteContent,
             onValueChange = { noteContent = it },
@@ -148,12 +146,12 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                 .weight(1f)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        // Wiersz z przyciskami
+        // Wiersz1
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Przycisk do zapisywania notatki
+
             Button(
                 onClick = {
                     viewModel.updateNote(
@@ -170,28 +168,28 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
             ) {
                 Text("Zapisz Notatkę")
             }
-            // Przycisk do dodawania zdjęcia (na razie bez funkcjonalności)
+
             Button(
-                onClick = { /* Add image functionality */ },
+                onClick = { /* dodanie zdjęcia */ },
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
                 Text("Dodaj Zdjęcie")
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        // Wiersz z kolejnymi przyciskami
+        // Wiersz2
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Przycisk do dodawania nagrania głosowego (na razie bez funkcjonalności)
+
             Button(
-                onClick = { /* Add audio recording functionality */ },
+                onClick = { /* magranie dzwięku */ },
                 modifier = Modifier.weight(1f).padding(end = 8.dp)
             ) {
                 Text("Dodaj Nagranie")
             }
-            // Przycisk do usuwania notatki
+
             Button(
                 onClick = {
                     viewModel.deleteNote(noteId)
@@ -204,7 +202,7 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        // Przycisk do powrotu do poprzedniego ekranu
+
         Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
             Text("Wróć")
         }

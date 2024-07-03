@@ -8,7 +8,7 @@ coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleVersion = "2.8.2"
+lifecycleVersion = "2.8.3"
 activityCompose = "1.9.0"
 
 composeBom = "2024.06.00"
@@ -65,7 +65,6 @@ firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" 
 firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx" }
 
-
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesVersion" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 
@@ -85,10 +84,6 @@ maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = 
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-
-
-
-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

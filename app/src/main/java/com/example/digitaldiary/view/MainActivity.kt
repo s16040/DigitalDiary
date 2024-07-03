@@ -262,7 +262,7 @@ class MainActivity : AppCompatActivity() {
                         if (task.isSuccessful) {
                             onLoginSuccess()
                         } else {
-                            // Obsługa błędu logowania
+                            // Obsługa błędu logowania?
                         }
                     }
             },
@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
                         if (task.isSuccessful) {
                             onLoginSuccess()
                         } else {
-                            // Obsługa błędu rejestracji
+                            // Obsługa błędu rejestracji?
                         }
                     }
             },
