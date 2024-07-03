@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -21,6 +22,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.digitaldiary.R
 import com.example.digitaldiary.ui.theme.DigitalDiaryTheme
 import com.example.digitaldiary.viewmodel.NoteViewModel
 import com.example.digitaldiary.viewmodel.NoteViewModelFactory
@@ -147,14 +149,14 @@ class MainActivity : AppCompatActivity() {
             TextField(
                 value = noteTitle,
                 onValueChange = { noteTitle = it },
-                label = { Text("Tytuł notatki") },
+                label = { Text(stringResource(id = R.string.title_note)) },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
             TextField(
                 value = noteContent,
                 onValueChange = { noteContent = it },
-                label = { Text("Treść notatki") },
+                label = { Text(stringResource(id = R.string.content_note)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -183,7 +185,7 @@ class MainActivity : AppCompatActivity() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Zapisz Notatkę")
+                Text(stringResource(id = R.string.add_note))
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -194,13 +196,13 @@ class MainActivity : AppCompatActivity() {
                     onClick = { /* Add image functionality */ },
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 ) {
-                    Text("Dodaj Zdjęcie")
+                    Text(stringResource(id = R.string.add_image))
                 }
                 Button(
                     onClick = { /* Add audio recording functionality */ },
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
-                    Text("Dodaj Nagranie")
+                    Text(stringResource(id = R.string.add_audio))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -212,7 +214,7 @@ class MainActivity : AppCompatActivity() {
                     onClick = { /* Navigate to Map Screen */ },
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 ) {
-                    Text("Mapa Notatek")
+                    Text(stringResource(id = R.string.map_notes))
                 }
                 Button(
                     onClick = {
@@ -220,12 +222,12 @@ class MainActivity : AppCompatActivity() {
                     },
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
-                    Text("Poprzednie Notatki")
+                    Text(stringResource(id = R.string.previous_notes))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-                Text("Wyloguj")
+                Text(stringResource(id = R.string.logout))
             }
         }
     }
@@ -252,7 +254,7 @@ class MainActivity : AppCompatActivity() {
             TextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(stringResource(id = R.string.password)) },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -268,7 +270,7 @@ class MainActivity : AppCompatActivity() {
             },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Zaloguj się")
+                Text(stringResource(id = R.string.login))
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = {
@@ -283,7 +285,7 @@ class MainActivity : AppCompatActivity() {
             },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Zarejestruj się")
+                Text(stringResource(id = R.string.register))
             }
         }
     }

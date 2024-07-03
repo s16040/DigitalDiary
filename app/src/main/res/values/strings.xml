@@ -1,5 +1,17 @@
 <resources>
     <string name="app_name">DigitalDiary</string>
-
+    <string name="title_note">Tytuł notatki</string>
+    <string name="content_note">Treść notatki</string>
+    <string name="add_note">Zapisz Notatkę</string>
+    <string name="add_image">Dodaj Zdjęcie</string>
+    <string name="add_audio">Dodaj Nagranie</string>
+    <string name="map_notes">Mapa Notatek</string>
+    <string name="previous_notes">Poprzednie Notatki</string>
+    <string name="logout">Wyloguj</string>
+    <string name="login">Zaloguj się</string>
+    <string name="register">Zarejestruj się</string>
+    <string name="delete">Usuń</string>
+    <string name="back">Wróć</string>
+    <string name="password">Hasło</string>
 </resources>
 

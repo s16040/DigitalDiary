@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
+import com.example.digitaldiary.R
 import com.example.digitaldiary.viewmodel.NoteViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -132,7 +134,7 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         TextField(
             value = noteTitle,
             onValueChange = { noteTitle = it },
-            label = { Text("Tytuł notatki") },
+            label = { Text(stringResource(id = R.string.title_note)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -140,7 +142,7 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         TextField(
             value = noteContent,
             onValueChange = { noteContent = it },
-            label = { Text("Treść notatki") },
+            label = { Text(stringResource(id = R.string.title_note)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
@@ -166,14 +168,14 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                 },
                 modifier = Modifier.weight(1f).padding(end = 8.dp)
             ) {
-                Text("Zapisz Notatkę")
+                Text(stringResource(id = R.string.add_note))
             }
 
             Button(
                 onClick = { /* dodanie zdjęcia */ },
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
-                Text("Dodaj Zdjęcie")
+                Text(stringResource(id = R.string.add_image))
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -187,7 +189,7 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                 onClick = { /* magranie dzwięku */ },
                 modifier = Modifier.weight(1f).padding(end = 8.dp)
             ) {
-                Text("Dodaj Nagranie")
+                Text(stringResource(id = R.string.add_audio))
             }
 
             Button(
@@ -198,13 +200,13 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
-                Text("Usuń")
+                Text(stringResource(id = R.string.delete))
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
-            Text("Wróć")
+            Text(stringResource(id = R.string.back))
         }
         LaunchedEffect(Unit) {
             scope.launch {
