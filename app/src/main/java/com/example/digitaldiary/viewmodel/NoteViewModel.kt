@@ -1,5 +1,8 @@
 package com.example.digitaldiary.viewmodel
 
+import android.net.Uri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digitaldiary.model.Note
@@ -14,6 +17,16 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
     private val _noteState = MutableStateFlow<Note?>(null)
     val noteState: StateFlow<Note?> = _noteState
+
+//    private val _notes = MutableLiveData<List<Note>>()
+//    val notes: LiveData<List<Note>> get() = _notes
+
+    private val _imageUri = MutableLiveData<Uri?>()
+    val imageUri: LiveData<Uri?> get() = _imageUri
+
+    private val _audioPath = MutableLiveData<String?>()
+    val audioPath: LiveData<String?> get() = _audioPath
+
 
     fun loadNotes(userId: String) {
         viewModelScope.launch {
@@ -64,5 +77,12 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 loadNotes(note.userId)
             }
         }
+    }
+    fun setImageUri(uri: Uri?) {
+        _imageUri.value = uri
+    }
+
+    fun setAudioPath(path: String?) {
+        _audioPath.value = path
     }
 }

@@ -1,10 +1,12 @@
 package com.example.digitaldiary.view
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +23,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.digitaldiary.model.AudioRecorder
+import com.example.digitaldiary.model.ImagePicker
+import com.example.digitaldiary.repository.NoteRepository
 import com.example.digitaldiary.ui.theme.DigitalDiaryTheme
 import com.example.digitaldiary.viewmodel.NoteViewModel
 import com.example.digitaldiary.viewmodel.NoteViewModelFactory
@@ -31,63 +36,91 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.util.*
 
+
 class MainActivity : AppCompatActivity() {
 
-    private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory() }
-    private lateinit var auth: FirebaseAuth
+        private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory(NoteRepository()) }
+        private lateinit var auth: FirebaseAuth
+        private lateinit var fusedLocationClient: FusedLocationProviderClient
+        private lateinit var imagePicker: ImagePicker
+        private lateinit var audioRecorder: AudioRecorder
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            FirebaseApp.initializeApp(this)
+            auth = FirebaseAuth.getInstance()
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this)
-        auth = FirebaseAuth.getInstance()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        setContent {
-            DigitalDiaryTheme {
-                val user = auth.currentUser
-                val navController = rememberNavController()
-                if (user != null) {
-                    AppNavHost(navController, viewModel, user.uid, fusedLocationClient) {
-                        lifecycleScope.launch {
-                            auth.signOut()
-                            recreate()
+            setContent {
+                DigitalDiaryTheme {
+                    val user = auth.currentUser
+                    val navController = rememberNavController()
+                    if (user != null) {
+                        AppNavHost(navController, viewModel, user.uid, fusedLocationClient) {
+                            lifecycleScope.launch {
+                                auth.signOut()
+                                recreate()
+                            }
                         }
+                    } else {
+                        LoginScreen(onLoginSuccess = {
+                            recreate()
+                        })
                     }
-                } else {
-                    LoginScreen(onLoginSuccess = {
-                        recreate()
-                    })
                 }
+            }
+
+            imagePicker = ImagePicker(this)
+            audioRecorder = AudioRecorder()
+        }
+
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+            super.onActivityResult(requestCode, resultCode, data)
+            imagePicker.handleActivityResult(requestCode, resultCode, data) { uri ->
+                viewModel.setImageUri(uri)
+            }
+        }
+
+        fun onAddImageClick() {
+            imagePicker.pickImage(REQUEST_IMAGE_PICK)
+        }
+
+        fun onRecordAudioClick() {
+            val outputPath = getExternalFilesDir(Environment.DIRECTORY_MUSIC)?.absolutePath + "/recorded_audio.3gp"
+            audioRecorder.startRecording(outputPath)
+            viewModel.setAudioPath(outputPath)
+        }
+
+        fun onStopRecordingClick() {
+            audioRecorder.stopRecording()
+        }
+
+        fun onNavigateToMapClick() {
+            startActivity(Intent(this, MapActivity::class.java))
+        }
+
+
+
+        companion object {
+            const val REQUEST_IMAGE_PICK = 1
+        }
+
+        fun getLastKnownLocation(callback: (Location?) -> Unit) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                    1
+                )
+                return
+            }
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                callback(location)
             }
         }
     }
 
-    private fun getLastKnownLocation(callback: (Location?) -> Unit) {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ),
-                1
-            )
-            return
-        }
-
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            callback(location)
-        }
-    }
 
     @Composable
     fun AppNavHost(
@@ -111,124 +144,124 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @Composable
-    fun MainScreen(
-        viewModel: NoteViewModel,
-        userId: String,
-        navController: NavHostController,
-        onLogout: () -> Unit,
-        fusedLocationClient: FusedLocationProviderClient
-    ) {
-        var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
-        var noteContent by remember { mutableStateOf(TextFieldValue("")) }
-        var location by remember { mutableStateOf<Location?>(null) }
-        var city by remember { mutableStateOf("") }
-        val context = LocalContext.current
+@Composable
+fun MainScreen(
+    viewModel: NoteViewModel,
+    userId: String,
+    navController: NavHostController,
+    onLogout: () -> Unit,
+    fusedLocationClient: FusedLocationProviderClient
+) {
+    var noteTitle by remember { mutableStateOf(TextFieldValue("")) }
+    var noteContent by remember { mutableStateOf(TextFieldValue("")) }
+    var location by remember { mutableStateOf<Location?>(null) }
+    var city by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-        LaunchedEffect(Unit) {
-            getLastKnownLocation { loc ->
-                location = loc
-                loc?.let {
-                    val geocoder = Geocoder(context, Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                    if (!addresses.isNullOrEmpty()) {
-                        city = addresses[0].locality ?: ""
-                    }
+    LaunchedEffect(Unit) {
+        (context as MainActivity).getLastKnownLocation { loc ->
+            location = loc
+            loc?.let {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    city = addresses[0].locality ?: ""
                 }
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            TextField(
-                value = noteTitle,
-                onValueChange = { noteTitle = it },
-                label = { Text("Tytuł notatki") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = noteContent,
-                onValueChange = { noteContent = it },
-                label = { Text("Treść notatki") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    viewModel.addNote(
-                        title = noteTitle.text,
-                        content = noteContent.text,
-                        userId = userId,
-                        city = city
-                    )
-                    noteTitle = TextFieldValue("")
-                    noteContent = TextFieldValue("")
-                    getLastKnownLocation { loc ->
-                        location = loc
-                        loc?.let {
-                            val geocoder = Geocoder(context, Locale.getDefault())
-                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                            if (!addresses.isNullOrEmpty()) {
-                                city = addresses[0].locality ?: ""
-                            }
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Zapisz Notatkę")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { /* Add image functionality */ },
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                ) {
-                    Text("Dodaj Zdjęcie")
-                }
-                Button(
-                    onClick = { /* Add audio recording functionality */ },
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
-                ) {
-                    Text("Dodaj Nagranie")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { /* Navigate to Map Screen */ },
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                ) {
-                    Text("Mapa Notatek")
-                }
-                Button(
-                    onClick = {
-                        navController.navigate("previousNotes")
-                    },
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
-                ) {
-                    Text("Poprzednie Notatki")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-                Text("Wyloguj")
             }
         }
     }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = noteTitle,
+            onValueChange = { noteTitle = it },
+            label = { Text("Tytuł notatki") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = noteContent,
+            onValueChange = { noteContent = it },
+            label = { Text("Treść notatki") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = {
+                viewModel.addNote(
+                    title = noteTitle.text,
+                    content = noteContent.text,
+                    userId = userId,
+                    city = city
+                )
+                noteTitle = TextFieldValue("")
+                noteContent = TextFieldValue("")
+                (context as MainActivity).getLastKnownLocation { loc ->
+                    location = loc
+                    loc?.let {
+                        val geocoder = Geocoder(context, Locale.getDefault())
+                        val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+                        if (!addresses.isNullOrEmpty()) {
+                            city = addresses[0].locality ?: ""
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Zapisz Notatkę")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = { (context as MainActivity).onAddImageClick() },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Dodaj Zdjęcie")
+            }
+            Button(
+                onClick = { (context as MainActivity).onRecordAudioClick() },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Dodaj Nagranie")
+            }
+            Button(
+                onClick = { (context as MainActivity).onStopRecordingClick() },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Zatrzymaj Nagranie")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = { (context as MainActivity).onNavigateToMapClick() },
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Mapa Notatek")
+            }
+
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
+            Text("Wyloguj")
+        }
+    }
+}
+
 
     @Composable
     fun LoginScreen(onLoginSuccess: () -> Unit) {
@@ -287,4 +320,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-}
+
