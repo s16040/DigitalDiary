@@ -1,14 +1,22 @@
 package com.example.digitaldiary.viewmodel
 
+
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digitaldiary.model.Note
 import com.example.digitaldiary.repository.NoteRepository
+import com.example.digitaldiary.utils.MediaUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
-class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
+class NoteViewModel(private val repository: NoteRepository,private val context: Context) : ViewModel() {
+
+    private val mediaUtils = MediaUtils(context)
+
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
     val notes: StateFlow<List<Note>> = _notes
 
@@ -69,12 +77,46 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     fun updatePhotoUri(uri: String) {
         viewModelScope.launch {
             noteState.value?.let { note ->
-                updateNote(note.copy(imageUrl = uri))
+                val firebaseUri = Uri.parse(uri)
+                val firebaseUrl = mediaUtils.uploadMediaToFirebase(firebaseUri, "images")
+                updateNote(note.copy(imageUrl = firebaseUrl))
             }
         }
     }
 
-    fun updateAudioPath(filePath: String) {
-
+    fun updateAudioPath(audioPath: String) {
+        viewModelScope.launch {
+            try {
+                val audioUri = Uri.fromFile(File(audioPath))
+                val firebaseUrl = mediaUtils.uploadMediaToFirebase(audioUri, "audio")
+                noteState.value?.let { note ->
+                    updateNote(note.copy(audioUrl = firebaseUrl))
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+    fun updateAudio(filePath: String) {
+        viewModelScope.launch {
+            val mediaUtils = MediaUtils(context)
+            val firebaseUrl = mediaUtils.uploadAudioToFirebase(filePath)
+            noteState.value?.let { note ->
+                updateNote(note.copy(audioUrl = firebaseUrl))
+            }
+        }
+    }
+    fun updateImage(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val mediaUtils = MediaUtils(context)
+                val firebaseUrl = mediaUtils.uploadImageToFirebase(uri)
+                noteState.value?.let { note ->
+                    updateNote(note.copy(imageUrl = firebaseUrl))
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
     }
 }

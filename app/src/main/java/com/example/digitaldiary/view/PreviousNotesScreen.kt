@@ -1,14 +1,19 @@
 package com.example.digitaldiary.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
+import com.example.digitaldiary.model.Note
 import com.example.digitaldiary.viewmodel.NoteViewModel
 
 @Composable
@@ -25,27 +30,34 @@ fun PreviousNotesScreen(navController: NavHostController, viewModel: NoteViewMod
             .padding(16.dp)
     ) {
         items(notes.sortedByDescending { it.timestamp }) { note ->
-            NoteItem(note.title, note.city, note.timestamp, onClick = {
+            NoteItem(note) {
                 navController.navigate("editNote/${note.id}")
-            })
+            }
             Divider(modifier = Modifier.padding(vertical = 8.dp))
         }
     }
 }
 
 @Composable
-fun NoteItem(title: String, city: String?, timestamp: Long, onClick: () -> Unit) {
+fun NoteItem(note: Note, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable(onClick = onClick)
             .padding(8.dp)
     ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        Text(text = note.title, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = city ?: "", style = MaterialTheme.typography.bodyMedium)
+        Text(text = note.city ?: "", style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(2.dp))
-        Text(text = formatDate(timestamp), style = MaterialTheme.typography.bodySmall)
+        Text(text = formatDate(note.timestamp), style = MaterialTheme.typography.bodySmall)
+        note.imageUrl?.let { url ->
+            Image(
+                painter = rememberAsyncImagePainter(model = url),
+                contentDescription = null,
+                modifier = Modifier.height(120.dp)
+            )
+        }
     }
 }
 

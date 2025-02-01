@@ -43,14 +43,28 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
-
-    private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory() }
+    private val permissions = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+        if (allGranted) {
+            // Permissions granted
+        }
+    }
+    private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory(applicationContext) }
     private lateinit var auth: FirebaseAuth
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        permissionLauncher.launch(permissions)
         FirebaseApp.initializeApp(this)
         auth = FirebaseAuth.getInstance()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -174,19 +188,23 @@ class MainActivity : AppCompatActivity() {
             TextField(
                 value = noteTitle,
                 onValueChange = { noteTitle = it },
-                label = { stringResource(R.string.note_title)  },
+                label = { Text(stringResource(R.string.note_title))  },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
             TextField(
                 value = noteContent,
                 onValueChange = { noteContent = it },
-                label = { stringResource(R.string.note_content) },
+                label = { Text(stringResource(R.string.note_title)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = {
                     viewModel.addNote(
@@ -212,15 +230,14 @@ class MainActivity : AppCompatActivity() {
             ) {
                 stringResource(R.string.save_note)
             }
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
+        Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
-                    onClick = {
+            Button(
+                onClick = {
                         val tempUri = FileProvider.getUriForFile(
                             context,
                             "${context.packageName}.provider",
@@ -228,13 +245,14 @@ class MainActivity : AppCompatActivity() {
                         )
                         photoUri = tempUri
                         launcher.launch(tempUri)
-                    }
-                ) {
+                    },
+                modifier = Modifier.weight(1f)
+            ) {
                     Text(stringResource(R.string.add_photo))
-                }
+            }
 
-                Button(
-                    onClick = {
+            Button(
+                onClick = {
                         if (isRecording) {
                             mediaUtils.stopRecording()?.let { filePath ->
                                 viewModel.updateAudioPath(filePath)
@@ -244,7 +262,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         isRecording = !isRecording
                     },
-                    modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         if (isRecording)
@@ -254,29 +272,33 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
+            Button(
                     onClick = { /* Navigate to Map Screen */ },
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 ) {
-                    Text("Mapa Notatek")
+                    Text(stringResource(R.string.notes_map))
                 }
-                Button(
+            Button(
                     onClick = {
                         navController.navigate("previousNotes")
                     },
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
-                    Text("Poprzednie Notatki")
+                    Text(stringResource(R.string.previous_notes))
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-                Text("Wyloguj")
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.logout))
             }
         }
     }
@@ -319,7 +341,7 @@ class MainActivity : AppCompatActivity() {
             },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Zaloguj się")
+                Text("Login")
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = {
@@ -334,7 +356,7 @@ class MainActivity : AppCompatActivity() {
             },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Zarejestruj się")
+                Text("Register")
             }
         }
     }

@@ -8,10 +8,10 @@ import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
 import android.os.Environment
+//import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 //import androidx.activity.compose.rememberLauncherForActivityResult
-//import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -91,7 +91,28 @@ private fun createImageFile(context: Context): File {
     val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
     return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
 }
-
+//val imagePicker = rememberLauncherForActivityResult(
+//    contract = ActivityResultContracts.TakePicture()
+//) { success ->
+//    if (success) {
+//        photoUri?.let { uri ->
+//            viewModel.updateImage(uri)
+//        }
+//    }
+//}
+//
+//@Composable
+//fun ImagePreview(imageUrl: String?) {
+//    if (imageUrl != null) {
+//        AsyncImage(
+//            model = imageUrl,
+//            contentDescription = null,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(200.dp)
+//        )
+//    }
+//}
 @Composable
 fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, noteId: String) {
     val context = LocalContext.current
@@ -158,32 +179,71 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-    ) {
+        ) {
 
         TextField(
             value = noteTitle,
             onValueChange = { noteTitle = it },
-            label = {stringResource(R.string.note_title) },
+            label = {Text(stringResource(R.string.note_title)) },
             modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+            )
+
+    Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
             value = noteContent,
             onValueChange = { noteContent = it },
-            label = {stringResource(R.string.note_content) },
+            label = {Text(stringResource(R.string.note_content)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-        )
+            )
+        var isRecording by remember { mutableStateOf(false) }
+        val mediaUtils = remember { MediaUtils(context) }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        // Wiersz1
-        Row(
+        Button(
+            onClick = {
+                if (isRecording) {
+                    mediaUtils.stopRecording()?.let { filePath ->
+                        viewModel.updateAudio(filePath)
+                    }
+                } else {
+                    mediaUtils.startRecording()
+                }
+                isRecording = !isRecording
+            }
+        ) {
+            Text(if (isRecording) stringResource(R.string.stop_recording)
+            else stringResource(R.string.start_recording))
+        }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                viewModel.updateNote(
+                    noteState!!.copy(
+                        title = noteTitle.text,
+                        content = noteContent.text,
+                        city = city,
+                        timestamp = System.currentTimeMillis()
+                        )
+                    )
+                navController.popBackStack()
+                },
+            modifier = Modifier
+                .fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.save_note))
+            }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
+        Button(
                 onClick = {
                     val tempUri = FileProvider.getUriForFile(
                         context,
@@ -192,12 +252,13 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
                     )
                     photoUri = tempUri
                     launcher.launch(tempUri)
-                }
+                },
+            modifier = Modifier.weight(1f)
             ) {
                 Text(stringResource(R.string.add_photo))
             }
 
-            Button(
+        Button(
                 onClick = {
                     if (isRecording) {
                         mediaUtils.stopRecording()?.let { filePath ->
@@ -219,31 +280,37 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(16.dp))
 
-        // Wiersz2
-        Row(
+    Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
-            Button(
-                onClick = {
+        Button(
+            onClick = {
                     viewModel.deleteNote(noteId)
                     navController.popBackStack()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+            modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
             ) {
-                stringResource(R.string.delete)
+                Text(stringResource(R.string.delete))
             }
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+            ) {
+                Text(stringResource(R.string.back))
+            }
+
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
-            stringResource(R.string.back)
-        }
+
         LaunchedEffect(Unit) {
             scope.launch {
                 updateLocationAndCity(fusedLocationClient, context) { loc, cityName ->

@@ -18,8 +18,8 @@
     <string name="permission_camera_rationale">Wymagany dostęp do aparatu</string>
     <string name="permission_record_audio_rationale">Wymagany dostęp do mikrofonu</string>
     <string name="permission_location_rationale">Wymagany dostęp do lokalizacji</string>
-    <string name="stop_recording">Zatrzymaj Nagrywanie</string>
-    <string name="start_recording">Rozpocznij Nagrywanie</string>
+    <string name="stop_recording">Nagrywanie Stop</string>
+    <string name="start_recording">Nagrywanie</string>
     <string name="recording_in_progress">Nagrywanie w toku...</string>
     <string name="photo_capture_success">Zdjęcie zostało zrobione</string>
     <string name="photo_capture_error">Błąd podczas robienia zdjęcia</string>

@@ -87,10 +87,13 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.maps.compose)
 
+    implementation(libs.coil.compose)
+
     implementation(libs.androidx.room.runtime)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.support.annotations)
     kapt(libs.androidx.room.compiler)
 
     implementation(libs.androidx.room.ktx)

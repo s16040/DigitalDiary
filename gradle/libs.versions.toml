@@ -1,6 +1,7 @@
 [versions]
 
 agp = "8.5.0"
+coilCompose = "2.5.0"
 kotlin = "1.9.0"
 googleServices = "4.4.2"
 
@@ -33,10 +34,12 @@ firebaseFirestoreKtx = "25.0.0"
 appCompat = "1.7.0"
 navigationRuntimeKtx = "2.7.7"
 navigationCompose = "2.7.7"
+supportAnnotations = "28.0.0"
 
 [libraries]
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "appCompat" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -84,6 +87,7 @@ maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = 
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+support-annotations = { group = "com.android.support", name = "support-annotations", version.ref = "supportAnnotations" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
