@@ -8,6 +8,8 @@ data class Note(
     val imageUrl: String? = null,
     val audioUrl: String? = null,
     val location: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val city: String = ""
 )

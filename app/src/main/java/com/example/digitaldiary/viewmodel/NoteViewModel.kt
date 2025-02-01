@@ -65,4 +65,16 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
             }
         }
     }
+
+    fun updatePhotoUri(uri: String) {
+        viewModelScope.launch {
+            noteState.value?.let { note ->
+                updateNote(note.copy(imageUrl = uri))
+            }
+        }
+    }
+
+    fun updateAudioPath(filePath: String) {
+
+    }
 }
