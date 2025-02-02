@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import java.io.File
@@ -51,6 +52,7 @@ class MediaUtils(private val context: Context) {
             mediaRecorder = null
             currentAudioFile?.absolutePath
         } catch (e: Exception) {
+            Log.e("MediaUtils", "Błąd podczas zatrzymywania nagrania", e)
             null
         }
     }
@@ -63,6 +65,7 @@ class MediaUtils(private val context: Context) {
             ref.putFile(Uri.fromFile(file)).await()
             ref.downloadUrl.await().toString()
         } catch (e: Exception) {
+            Log.e("MediaUtils", "Błąd przy przesyłaniu audio", e)
             null
         }
     }
@@ -84,6 +87,7 @@ class MediaUtils(private val context: Context) {
             ref.putFile(uri).await()
             ref.downloadUrl.await().toString()
         } catch (e: Exception) {
+            Log.e("MediaUtils", "Błąd przy przesyłaniu obrazu", e)
             null
         }
     }

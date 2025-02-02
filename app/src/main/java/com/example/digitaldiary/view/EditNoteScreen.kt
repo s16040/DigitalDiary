@@ -8,6 +8,7 @@ import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 //import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -80,6 +81,7 @@ suspend fun updateLocationAndCity(
                 callback(null, null)
             }
         } catch (e: Exception) {
+            Log.e("EditNoteScreen", "Błąd przy aktualizacji lokalizacji", e)
             withContext(Dispatchers.Main) {
                 callback(null, null)
             }
@@ -201,21 +203,6 @@ fun EditNoteScreen(navController: NavHostController, viewModel: NoteViewModel, n
         var isRecording by remember { mutableStateOf(false) }
         val mediaUtils = remember { MediaUtils(context) }
 
-        Button(
-            onClick = {
-                if (isRecording) {
-                    mediaUtils.stopRecording()?.let { filePath ->
-                        viewModel.updateAudio(filePath)
-                    }
-                } else {
-                    mediaUtils.startRecording()
-                }
-                isRecording = !isRecording
-            }
-        ) {
-            Text(if (isRecording) stringResource(R.string.stop_recording)
-            else stringResource(R.string.start_recording))
-        }
 
     Spacer(modifier = Modifier.height(16.dp))
 

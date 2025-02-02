@@ -3,6 +3,7 @@ package com.example.digitaldiary.utils
 import android.content.Context
 import android.location.Geocoder
 import android.location.Location
+import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -27,6 +28,7 @@ class LocationUtils(private val context: Context) {
                 return Pair(location, cityName)
             }
         } catch (e: Exception) {
+            Log.e("LocationUtils", "Błąd przy pobieraniu lokalizacji", e)
             e.printStackTrace()
         }
         return Pair(null, null)

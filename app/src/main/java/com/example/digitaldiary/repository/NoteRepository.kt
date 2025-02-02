@@ -1,5 +1,6 @@
 package com.example.digitaldiary.repository
 
+import android.util.Log
 import com.example.digitaldiary.model.Note
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -34,7 +35,7 @@ class NoteRepository {
                 notesCollection.document(noteId).update("id", noteId)
             }
             .addOnFailureListener { e ->
-                // Obsługa błędu?
+                Log.e("NoteRepository", "Błąd przy dodawaniu notatki", e)
             }
     }
 
@@ -43,6 +44,7 @@ class NoteRepository {
             val documentSnapshot = notesCollection.document(noteId).get().await()
             documentSnapshot.toObject(Note::class.java)
         } catch (e: Exception) {
+            Log.e("NoteRepository", "Błąd przy pobieraniu notatki", e)
             null
         }
     }

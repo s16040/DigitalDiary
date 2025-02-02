@@ -3,6 +3,7 @@ package com.example.digitaldiary.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.digitaldiary.model.Note
@@ -58,18 +59,26 @@ class NoteViewModel(private val repository: NoteRepository,private val context: 
     }
 
     fun updateNote(note: Note) {
-        viewModelScope.launch {
-            repository.updateNote(note)
-            loadNotes(note.userId)
+        try {
+            viewModelScope.launch {
+                repository.updateNote(note)
+                loadNotes(note.userId)
+            }
+        } catch (e: Exception) {
+            Log.e("NoteViewModel", "Błąd podczas aktualizacji notatki", e)
         }
     }
 
     fun deleteNote(noteId: String) {
         viewModelScope.launch {
-            val note = repository.getNoteById(noteId)
-            if (note != null) {
-                repository.deleteNote(noteId)
-                loadNotes(note.userId)
+            try {
+                val note = repository.getNoteById(noteId)
+                if (note != null) {
+                    repository.deleteNote(noteId)
+                    loadNotes(note.userId)
+                }
+            }catch (e: Exception) {
+                Log.e("NoteViewModel", "Błąd podczas usuwania notatki", e)
             }
         }
     }
@@ -77,9 +86,18 @@ class NoteViewModel(private val repository: NoteRepository,private val context: 
     fun updatePhotoUri(uri: String) {
         viewModelScope.launch {
             noteState.value?.let { note ->
-                val firebaseUri = Uri.parse(uri)
-                val firebaseUrl = mediaUtils.uploadMediaToFirebase(firebaseUri, "images")
-                updateNote(note.copy(imageUrl = firebaseUrl))
+                try {
+                    val file = File(Uri.parse(uri).path)
+                    if (!file.exists()) {
+                        Log.e("NoteViewModel", "Plik zdjęcia nie istnieje: $uri")
+                        return@launch
+                    }
+                    val firebaseUrl = mediaUtils.uploadMediaToFirebase(Uri.fromFile(file), "images")
+                    updateNote(note.copy(imageUrl = firebaseUrl))
+                    Log.d("NoteViewModel", "Zdjęcie zaktualizowane: $firebaseUrl")
+                } catch (e: Exception) {
+                    Log.e("NoteViewModel", "Błąd podczas aktualizacji zdjęcia", e)
+                }
             }
         }
     }
@@ -87,36 +105,43 @@ class NoteViewModel(private val repository: NoteRepository,private val context: 
     fun updateAudioPath(audioPath: String) {
         viewModelScope.launch {
             try {
-                val audioUri = Uri.fromFile(File(audioPath))
-                val firebaseUrl = mediaUtils.uploadMediaToFirebase(audioUri, "audio")
+                val audioFile = File(audioPath)
+                if (!audioFile.exists()) {
+                    Log.e("NoteViewModel", "Plik audio nie istnieje: $audioPath")
+                    return@launch
+                }
+                val firebaseUrl = mediaUtils.uploadMediaToFirebase(Uri.fromFile(audioFile), "audio")
                 noteState.value?.let { note ->
                     updateNote(note.copy(audioUrl = firebaseUrl))
+                    Log.d("NoteViewModel", "Nagranie zaktualizowane: $firebaseUrl")
                 }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("NoteViewModel", "Błąd podczas aktualizacji nagrania", e)
             }
         }
     }
-    fun updateAudio(filePath: String) {
-        viewModelScope.launch {
-            val mediaUtils = MediaUtils(context)
-            val firebaseUrl = mediaUtils.uploadAudioToFirebase(filePath)
-            noteState.value?.let { note ->
-                updateNote(note.copy(audioUrl = firebaseUrl))
-            }
-        }
-    }
-    fun updateImage(uri: Uri) {
-        viewModelScope.launch {
-            try {
-                val mediaUtils = MediaUtils(context)
-                val firebaseUrl = mediaUtils.uploadImageToFirebase(uri)
-                noteState.value?.let { note ->
-                    updateNote(note.copy(imageUrl = firebaseUrl))
-                }
-            } catch (e: Exception) {
-                // Handle error
-            }
-        }
-    }
+
+
+//    fun updateAudio(filePath: String) {
+//        viewModelScope.launch {
+//            val mediaUtils = MediaUtils(context)
+//            val firebaseUrl = mediaUtils.uploadAudioToFirebase(filePath)
+//            noteState.value?.let { note ->
+//                updateNote(note.copy(audioUrl = firebaseUrl))
+//            }
+//        }
+//    }
+//    fun updateImage(uri: Uri) {
+//        viewModelScope.launch {
+//            try {
+//                val mediaUtils = MediaUtils(context)
+//                val firebaseUrl = mediaUtils.uploadImageToFirebase(uri)
+//                noteState.value?.let { note ->
+//                    updateNote(note.copy(imageUrl = firebaseUrl))
+//                }
+//            } catch (e: Exception) {
+//                // Handle error
+//            }
+//        }
+//    }
 }

@@ -8,6 +8,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,7 +55,10 @@ class MainActivity : AppCompatActivity() {
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
         if (allGranted) {
-            // Permissions granted
+            Log.d("MainActivity", "Wszystkie uprawnienia przyznane")
+            // dodatkowa inicjalizacja?
+        } else {
+            Log.w("MainActivity", "Nie wszystkie uprawnienia przyznane")
         }
     }
     private val viewModel: NoteViewModel by viewModels { NoteViewModelFactory(applicationContext) }
@@ -66,17 +70,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         permissionLauncher.launch(permissions)
         FirebaseApp.initializeApp(this)
+        Log.d("MainActivity", "Firebase zainicjalizowany")
         auth = FirebaseAuth.getInstance()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContent {
             DigitalDiaryTheme {
                 val user = auth.currentUser
+                if (user != null) {
+                    Log.d("MainActivity", "Zalogowany użytkownik: ${user.uid}")
+                } else {
+                    Log.d("MainActivity", "Brak zalogowanego użytkownika")
+                }
                 val navController = rememberNavController()
                 if (user != null) {
                     AppNavHost(navController, viewModel, user.uid, fusedLocationClient) {
                         lifecycleScope.launch {
                             auth.signOut()
+                            Log.d("MainActivity", "Użytkownik wylogowany")
                             recreate()
                         }
                     }
@@ -228,7 +239,7 @@ class MainActivity : AppCompatActivity() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                stringResource(R.string.save_note)
+                Text(stringResource(R.string.save_note))
             }
         Spacer(modifier = Modifier.height(16.dp))
 
