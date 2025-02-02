@@ -1,5 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">DigitalDiary</string>
-    <string name="title_activity_map">MapActivity</string>
+    <string name="app_name">Digital Diary</string>
+    <string name="note_title">Tytuł notatki</string>
+    <string name="note_content">Treść notatki</string>
+    <string name="save_note">Zapisz Notatkę</string>
+    <string name="add_photo">Dodaj Zdjęcie</string>
+    <string name="add_recording">Dodaj Nagranie</string>
+    <string name="notes_map">Mapa Notatek</string>
+    <string name="previous_notes">Poprzednie Notatki</string>
+    <string name="logout">Wyloguj</string>
+    <string name="delete">Usuń</string>
+    <string name="back">Wróć</string>
+    <string name="login">Zaloguj się</string>
+    <string name="register">Zarejestruj się</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="permission_camera_rationale">Wymagany dostęp do aparatu</string>
+    <string name="permission_record_audio_rationale">Wymagany dostęp do mikrofonu</string>
+    <string name="permission_location_rationale">Wymagany dostęp do lokalizacji</string>
+    <string name="stop_recording">Nagrywanie Stop</string>
+    <string name="start_recording">Nagrywanie</string>
+    <string name="recording_in_progress">Nagrywanie w toku...</string>
+    <string name="photo_capture_success">Zdjęcie zostało zrobione</string>
+    <string name="photo_capture_error">Błąd podczas robienia zdjęcia</string>
+    <string name="audio_save_success">Nagranie zostało zapisane</string>
+    <string name="audio_save_error">Błąd podczas zapisywania nagrania</string>
+    <string name="media_permission_required">Wymagane uprawnienia do multimediów</string>
+    <string name="permission_granted">Uprawnienie przyznane</string>
+    <string name="permission_denied">Uprawnienie odrzucone</string>
 </resources>
-
