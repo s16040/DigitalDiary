@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "DigitalDiary"
 include(":app")
+//ver 3.0.
